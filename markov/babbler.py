@@ -111,9 +111,31 @@ class Babbler:
         and that any n-grams that stops a sentence should be followed by the
         special symbol 'EOL' in the state transition table. 'EOL' is short for 'end of line'; since it is capitalized and all our input texts are lower-case, it will be unambiguous.
         """
-
-        pass #The pass statement is used as a placeholder for future code. When the pass statement is executed, nothing happens, but you avoid getting an error when empty code is not allowed. Empty code is not allowed in loops, function definitions, class definitions, or in if statements.
-
+        words = sentence.split() #split the sentence into words. this creates a list of words
+        for i in range(len(words)):
+            words[i] = words[i].lower() #convert each word to lowercase
+        #words = [word.lower() for word in words] #Alternate method to convert all words to lowercase
+        
+        #strore first ngram as a starter
+        ngram = " ".join(words[:self.n]) #join the first n words to create the first ngram
+        self.starters.append(ngram) #add the ngram to the list of starters
+        
+        #process the ngrams
+        for i in range(len(words) - self.n): #loop through the words in the sentence
+            curr_ngram = " ".join(words[i:i+self.n]) #create the current ngram. here i is the starting index and i+self.n is the ending index
+            next_word = words[i+self.n] #get the next word after the current ngram
+            
+            if curr_ngram not in self.brainGraph:
+                self.brainGraph[curr_ngram] = []
+            self.brainGraph[curr_ngram].append(next_word) #add the next word to the list of possible next words for the current ngram
+            
+        #store last ngram as a stopper
+        last_ngram = " ".join(words[-self.n:]) #join the last n words to create the last ngram
+        self.stoppers.append(last_ngram) #add the ngram to the list of stoppers
+        if last_ngram not in self.brainGraph:
+            self.brainGraph[last_ngram] = []
+        self.brainGraph[last_ngram].append("EOL")  #add the special symbol 'EOL' to the list of possible next words for the last ngram
+        
 
     def get_starters(self):
         """
@@ -121,7 +143,7 @@ class Babbler:
         The resulting list may contain duplicates, because one n-gram may start
         multiple sentences. Probably a one-line method.
         """
-        pass
+        return self.starters
     
 
     def get_stoppers(self):
@@ -130,7 +152,7 @@ class Babbler:
         The resulting value may contain duplicates, because one n-gram may stop
         multiple sentences. Probably a one-line method.
         """
-        pass
+        return self.stoppers
 
 
     def get_successors(self, ngram):
@@ -145,8 +167,7 @@ class Babbler:
         If n=3, then the n-gram 'the dog dances' is followed by 'quickly' one time, and 'with' two times.
         If the given state never occurs, return an empty list.
         """
-
-        pass
+        return self.brainGraph.get(ngram, [])
     
 
     def get_all_ngrams(self):
@@ -154,8 +175,7 @@ class Babbler:
         Return all the possible n-grams (sequences of n words), that we have seen across all sentences.
         Probably a one-line method.
         """
-
-        pass
+        return list(self.brainGraph.keys())
 
     
     def has_successor(self, ngram):
@@ -165,8 +185,7 @@ class Babbler:
         because ngrams with no successor words must not have occurred in the training sentences.
         Probably a one-line method.
         """
-
-        pass
+        return bool(self.brainGraph.get(ngram, []))
     
     
     def get_random_successor(self, ngram):
@@ -180,11 +199,10 @@ class Babbler:
         and we call get_random_next_word() for the state 'the dog dances',
         we should get 'quickly' about 1/3 of the time, and 'with' 2/3 of the time.
         """
-
-        pass
+        return random.choice(self.brainGraph.get(ngram)) if self.has_successor(ngram) else None
     
 
-    def babble(self):
+    def babble(self, max_words=100):
         """
         Generate a random sentence using the following algorithm:
         
@@ -198,8 +216,18 @@ class Babbler:
             Our example state is now: 'b c d' 
         6: Repeat from step 2.
         """
-
-        pass
+        if not self.starters:
+            return ""
+        current_ngram = random.choice(self.starters)
+        words = current_ngram.split()
+        for i in range (max_words):
+            next_word = self.get_random_successor(current_ngram)
+            if next_word == "EOL":
+                break
+            words.append(next_word)
+            current_ngram = " ".join(words[-self.n:])
+        
+        return " ".join(words)
             
 
 # nothing to change here; read, understand, move along
@@ -211,6 +239,8 @@ def main(n=3, filename='tests/test1.txt', num_sentences=5):
     print('Currently running on ',filename)
     babbler = Babbler(n)
     babbler.add_file(filename)
+    # print("Starters: ", babbler.get_starters)
+
 
     try:
         print(f'num starters {len(babbler.get_starters())}')
@@ -237,9 +267,9 @@ if __name__ == '__main__':
     print("Entered arguments: ",sys.argv)
     sys.argv.pop(0) # remove the first parameter, which should be babbler.py, the name of the script
     # -------default values -----------
-    n = 3
+    n = 1
     filename = 'tests/test1.txt'
-    num_sentences = 5
+    num_sentences = 3
     #----------------------------------
     if len(sys.argv) > 0: # if any argumetns are passed, first is assumed to be n
         n = int(sys.argv.pop(0))
