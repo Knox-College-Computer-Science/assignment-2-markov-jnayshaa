@@ -267,9 +267,9 @@ if __name__ == '__main__':
     print("Entered arguments: ",sys.argv)
     sys.argv.pop(0) # remove the first parameter, which should be babbler.py, the name of the script
     # -------default values -----------
-    n = 1
-    filename = 'tests/test1.txt'
-    num_sentences = 3
+    n = 4
+    filename = '/Users/jnaysha/Documents/GitHub/assignment-2-markov-jnayshaa/markov/books/blake-poems.txt'
+    num_sentences = 7
     #----------------------------------
     if len(sys.argv) > 0: # if any argumetns are passed, first is assumed to be n
         n = int(sys.argv.pop(0))
